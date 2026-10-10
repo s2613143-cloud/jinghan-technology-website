@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JINGHAN TECHNOLOGY - 交互式预览</title>
+  <style>
+    :root {
+      --bg: #f5f0e7;
+      --bg-deep: #efe4d3;
+      --paper: #f9f5ef;
+      --ink: #171513;
+      --ink-soft: rgba(23,21,19,.74);
+      --muted: rgba(23,21,19,.54);
+      --gold: #d7a35e;
+      --gold-deep: #b86c36;
+      --gold-soft: #efd8bb;
+      --red: #a85735;
+      --line: rgba(17,16,15,.1);
+      --glow: rgba(215,163,94,.24);
+      --card: rgba(255,255,255,.18);
+      --white: #fffdf9;
+      --panel: rgba(19,17,15,.82);
+      --max: 1440px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; cursor: pointer; }
+    img { display: block; max-width: 100%; }
+
+    /* Header Styles */
+    .site-header {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      z-index: 60;
+      backdrop-filter: blur(18px);
+      background: rgba(245,240,231,.12);
+      border-bottom: 1px solid rgba(17,16,15,.05);
+      transition: all .35s ease;
+      box-shadow: none;
+    }
+    .site-header.scrolled {
+      background: rgba(245,240,231,.85);
+      border-bottom-color: rgba(17,16,15,.12);
+      box-shadow: 0 4px 20px rgba(0,0,0,.08);
+    }
+    .header-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 18px 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 22px;
+    }
+    .brand {
+      display: inline-flex; align-items: center; gap: 12px;
+      text-transform: uppercase; letter-spacing: .12em; font-size: 12px; font-weight: 700;
+      white-space: nowrap;
+      transition: transform .3s ease;
+    }
+    .brand:hover {
+      transform: scale(1.05);
+    }
+    .brand-mark {
+      position: relative; width: 20px; height: 20px; border-radius: 50%;
+      background: linear-gradient(135deg, #eacb8d 0%, #b76b37 100%);
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,.56), 0 0 24px rgba(215,163,94,.2);
+      animation: brandPulse 3s ease-in-out infinite;
+    }
+    @keyframes brandPulse {
+      0%, 100% { box-shadow: inset 0 0 0 2px rgba(255,255,255,.56), 0 0 24px rgba(215,163,94,.2); }
+      50% { box-shadow: inset 0 0 0 2px rgba(255,255,255,.56), 0 0 40px rgba(215,163,94,.35); }
+    }
+    .brand-mark::before {
+      content: ""; position: absolute; inset: 6px 8px 6px 8px; border-radius: 50% 46% 54% 50% / 55% 52% 48% 45%;
+      background: rgba(255,255,255,.42);
+      transform: rotate(-18deg);
+    }
+    .nav {
+      display: flex; align-items: center; gap: 26px;
+      font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-soft);
+    }
+    .nav a { 
+      position: relative;
+      padding: 8px 0;
+      transition: color .3s ease;
+    }
+    .nav a::after {
+      content: ""; position: absolute; left: 0; bottom: 0; width: 100%; height: 2px;
+      background: var(--gold); transform: scaleX(0); transform-origin: left; transition: .3s ease;
+    }
+    .nav a:hover {
+      color: var(--ink);
+    }
+    .nav a:hover::after { transform: scaleX(1); }
+
+    .lang-switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(17,16,15,.12);
+      border-radius: 999px;
+      background: rgba(255,255,255,.14);
+      padding: 8px 12px;
+      font-size: 11px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    .lang-switch button {
+      border: none; background: transparent; color: var(--ink-soft); cursor: pointer;
+      font: inherit; padding: 4px 8px; transition: all .25s ease;
+      border-radius: 6px;
+    }
+    .lang-switch button:hover {
+      background: rgba(17,16,15,.08);
+    }
+    .lang-switch button.active { 
+      color: var(--ink); 
+      font-weight: 700; 
+      background: rgba(215,163,94,.15);
+    }
+
+    /* Hero Section */
+    .story { position: relative; isolation: isolate; }
+    .section {
+      position: relative;
+      min-height: 100vh;
+      padding: 120px 0 80px;
+      overflow: hidden;
+    }
+    .section-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 44px;
+      position: relative; z-index: 2;
+    }
+
+    h1,h2,h3 {
+      margin: 0;
+      color: var(--ink);
+      line-height: .9;
+      letter-spacing: -.06em;
+      font-weight: 600;
+    }
+    .eyebrow, .section-kicker {
+      display: inline-block;
+      color: var(--gold-deep);
+      font-size: 11px;
+      letter-spacing: .28em;
+      text-transform: uppercase;
+      animation: slideInLeft .8s ease-out;
+    }
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      align-items: center;
+      background:
+        radial-gradient(circle at 22% 16%, rgba(255,255,255,.72), transparent 24%),
+        linear-gradient(180deg, #f9f4ed 0%, #f5efe7 24%, #efe3d2 100%);
+      padding-top: 80px;
+    }
+    .hero-wrap {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 42px;
+      align-items: end;
+      min-height: 72vh;
+    }
+    .hero-title {
+      font-size: clamp(4rem, 6vw, 8rem);
+      max-width: 760px;
+      margin-top: 20px;
+      text-wrap: balance;
+      animation: slideInLeft 1s ease-out .2s backwards;
+      color: var(--ink);
+    }
+    .hero-copy {
+      margin-top: 26px;
+      max-width: 620px;
+      color: var(--ink-soft);
+      font-size: clamp(1.1rem, 1.7vw, 1.7rem);
+      line-height: 1.52;
+      animation: slideInLeft 1s ease-out .4s backwards;
+    }
+    .hero-actions {
+      display: flex; gap: 18px; align-items: center; margin-top: 34px;
+      animation: slideInLeft 1s ease-out .6s backwards;
+    }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 52px; padding: 0 26px; border-radius: 999px;
+      font-size: 12px; letter-spacing: .18em; text-transform: uppercase; border: 1px solid transparent;
+      transition: all .3s ease;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn.primary {
+      color: #fffaf3;
+      background: linear-gradient(135deg, #a8512d, #d09652);
+      box-shadow: 0 18px 38px rgba(168,81,45,.18);
+    }
+    .btn.primary:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 24px 52px rgba(168,81,45,.28);
+    }
+    .btn.secondary {
+      color: var(--ink); background: rgba(255,255,255,.15); border: 1px solid rgba(17,16,15,.12);
+    }
+    .btn.secondary:hover {
+      background: rgba(255,255,255,.25);
+      transform: translateY(-2px);
+    }
+
+    .hero-visual {
+      position: relative;
+      height: 68vh;
+      min-height: 520px;
+      display: flex; align-items: flex-end; justify-content: center;
+      animation: slideInRight 1s ease-out .3s backwards;
+    }
+    .visual-panel {
+      position: absolute; inset: 8% 6% 10% 8%;
+      border-radius: 36px 36px 30px 30px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.08)),
+        radial-gradient(circle at 66% 20%, rgba(255,255,255,.38), transparent 22%),
+        linear-gradient(150deg, rgba(76,83,94,.08), rgba(230,213,193,.12));
+      border: 1px solid rgba(17,16,15,.06);
+      box-shadow: 0 30px 80px rgba(22,18,14,.05);
+      overflow: hidden;
+    }
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .visual-panel::before {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(239,220,204,.14));
+    }
+    .waterline {
+      position: absolute; left: 5%; right: 5%; bottom: 18%; height: 18%;
+      border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+      background:
+        linear-gradient(180deg, rgba(96,118,139,.22), rgba(32,54,65,.14)),
+        repeating-linear-gradient(180deg, rgba(255,255,255,.14) 0px, rgba(255,255,255,.14) 1px, rgba(255,255,255,0) 1px, rgba(255,255,255,0) 8px);
+      filter: blur(2px);
+      opacity: .9;
+      animation: waterFloat 4s ease-in-out infinite;
+    }
+    @keyframes waterFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .scroll-indicator {
+      position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      color: rgba(17,16,15,.6); font-size: 10px; letter-spacing: .3em; text-transform: uppercase;
+      animation: fadeInUp 1s ease-out 1.2s backwards;
+    }
+    .scroll-line {
+      position: relative; width: 1px; height: 64px; background: linear-gradient(180deg, transparent, rgba(17,16,15,.75), transparent); overflow: hidden;
+    }
+    .scroll-line::before {
+      content: ""; position: absolute; left: 0; top: -100%; width: 100%; height: 40%;
+      background: linear-gradient(180deg, transparent, rgba(17,16,15,.8), transparent);
+      animation: scrollPulse 2s ease-in-out infinite;
+    }
+    @keyframes scrollPulse {
+      0% { transform: translateY(-120%); opacity: 0; }
+      25% { opacity: 1; }
+      100% { transform: translateY(180%); opacity: 0; }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Content Sections */
+    .scene-headline {
+      display: grid; grid-template-columns: 1fr auto; gap: 34px; align-items: end;
+      margin-top: 20px;
+    }
+    .big-title {
+      margin-top: 12px;
+      font-size: clamp(3rem, 5vw, 7rem);
+      line-height: .88;
+      max-width: 760px;
+      letter-spacing: -.07em;
+    }
+    .section-intro {
+      max-width: 560px;
+      font-size: 1.05rem;
+      line-height: 1.74;
+      color: var(--ink-soft);
+      margin-top: 18px;
+    }
+
+    .split-grid {
+      display: grid; grid-template-columns: 1.08fr .92fr; gap: 44px; align-items: end; margin-top: 42px;
+    }
+    .feature-list {
+      list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 12px;
+    }
+    .feature-list li {
+      display: grid; grid-template-columns: 18px 1fr; gap: 14px; padding: 18px 0; border-top: 1px solid var(--line);
+      font-size: 1rem; line-height: 1.65; color: var(--ink-soft);
+      transition: all .3s ease;
+    }
+    .feature-list li:hover {
+      color: var(--ink);
+      border-top-color: var(--gold);
+      padding-left: 8px;
+    }
+    .feature-list li:first-child { border-top: none; }
+    .feature-list li::before {
+      content: ""; width: 7px; height: 7px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--red));
+      transform: translateY(12px); box-shadow: 0 0 18px rgba(215,163,94,.42);
+      transition: transform .3s ease;
+    }
+    .feature-list li:hover::before {
+      transform: translateY(12px) scale(1.4);
+    }
+
+    .grid-three {
+      display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 28px; margin-top: 52px;
+    }
+    .tiny-card {
+      padding: 26px 24px; border-radius: 26px; background: rgba(255,255,255,.08); border: 1px solid rgba(17,16,15,.08);
+      box-shadow: 0 22px 52px rgba(20,18,14,.04);
+      transition: all .3s ease;
+      cursor: pointer;
+    }
+    .tiny-card:hover {
+      transform: translateY(-8px);
+      background: rgba(255,255,255,.12);
+      box-shadow: 0 32px 72px rgba(20,18,14,.08);
+      border-color: var(--gold-soft);
+    }
+    .tiny-card .num {
+      display: inline-block; color: var(--gold-deep); font-size: 12px; letter-spacing: .18em; text-transform: uppercase;
+      margin-bottom: 14px;
+      font-weight: 700;
+    }
+    .tiny-card h3 {
+      font-size: clamp(1.5rem, 2vw, 2.4rem);
+      margin-bottom: 14px;
+    }
+    .tiny-card p {
+      margin: 0; color: var(--ink-soft); font-size: 1rem; line-height: 1.72;
+    }
+
+    /* Section Themes */
+    .section[data-theme="light"] {
+      background: var(--bg);
+    }
+    .section[data-theme="dark"] {
+      background: linear-gradient(180deg, rgba(17,15,13,.96), rgba(18,15,13,.92));
+      color: #f4eadc;
+    }
+    .section[data-theme="dark"] .big-title,
+    .section[data-theme="dark"] .section-intro,
+    .section[data-theme="dark"] .feature-list li {
+      color: rgba(244,234,220,.8);
+    }
+    .section[data-theme="dark"] .big-title {
+      color: #f9f4ee;
+    }
+
+    .editorial-visual {
+      position: relative; min-height: 560px; overflow: hidden; border-radius: 30px;
+      background: linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,.09));
+      border: 1px solid rgba(17,16,15,.08); 
+      box-shadow: 0 42px 90px rgba(10,8,6,.08);
+      transition: all .3s ease;
+    }
+    .editorial-visual:hover {
+      box-shadow: 0 52px 110px rgba(10,8,6,.12);
+      transform: translateY(-4px);
+    }
+    .editorial-visual::before {
+      content: ""; position: absolute; inset: 0;
+      background:
+        radial-gradient(circle at 72% 18%, rgba(255,255,255,.8), transparent 22%),
+        radial-gradient(circle at 42% 62%, rgba(195,141,82,.18), transparent 30%),
+        linear-gradient(180deg, rgba(17,16,15,.14), rgba(17,16,15,.02));
+      mix-blend-mode: screen;
+    }
+    .shape-mass {
+      position: absolute; inset: 10% 10% 8% 14%;
+      background: linear-gradient(160deg, rgba(186,125,73,.26), rgba(135,88,50,.12));
+      border-radius: 42% 58% 52% 48% / 46% 42% 58% 54%;
+      transform: rotate(-12deg); filter: blur(2px);
+      animation: shapePulse 6s ease-in-out infinite;
+    }
+    @keyframes shapePulse {
+      0%, 100% { transform: rotate(-12deg) scale(1); }
+      50% { transform: rotate(-12deg) scale(1.05); }
+    }
+
+    /* Contact Section */
+    .contact-wrap {
+      min-height: 100vh; display: grid; align-items: center; 
+      background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.8), transparent 28%), 
+                  linear-gradient(180deg, #f8f4ee 0%, #f2e5d5 100%);
+    }
+    .contact-panel {
+      max-width: var(--max); margin: 0 auto; width: 100%; padding: 0 44px 90px; 
+      display: grid; grid-template-columns: 1.1fr .9fr; gap: 40px; align-items: end;
+    }
+    .contact-header {
+      margin-top: 16px; font-size: clamp(2.8rem, 5vw, 6.5rem); 
+      line-height: .88; letter-spacing: -.08em;
+    }
+    .contact-card {
+      padding: 34px 28px; border-radius: 32px; background: rgba(255,255,255,.18); 
+      border: 1px solid rgba(17,16,15,.08);
+      box-shadow: 0 28px 80px rgba(17,16,15,.06);
+      transition: all .3s ease;
+    }
+    .contact-card:hover {
+      background: rgba(255,255,255,.25);
+      box-shadow: 0 38px 100px rgba(17,16,15,.1);
+    }
+    .contact-line {
+      display: flex; justify-content: space-between; align-items: center; gap: 20px; 
+      padding: 18px 0; border-top: 1px solid var(--line);
+      color: var(--ink-soft); font-size: .96rem;
+      transition: all .2s ease;
+    }
+    .contact-line:hover {
+      color: var(--ink);
+      padding-left: 6px;
+    }
+    .contact-line:first-child { border-top: none; }
+    .contact-line strong {
+      color: var(--ink); text-transform: uppercase; letter-spacing: .06em; 
+      font-size: 11px; font-weight: 700;
+    }
+
+    /* Footer */
+    .footer {
+      background: rgba(18,15,13,.96); color: rgba(255,255,255,.84); padding: 40px 0;
+    }
+    .footer-inner {
+      max-width: var(--max); margin: 0 auto; padding: 0 44px; 
+      display: flex; justify-content: space-between; align-items: center; gap: 20px;
+      font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+    }
+    .footer small { color: rgba(255,255,255,.7); letter-spacing: .1em; }
+
+    /* Responsive */
+    @media (max-width: 980px) {
+      .nav { display: none; }
+      .header-inner { padding: 16px 20px; }
+      .section-inner, .contact-panel { padding-left: 20px; padding-right: 20px; }
+      .hero-wrap, .split-grid, .contact-panel { grid-template-columns: 1fr; }
+      .hero-wrap { padding-top: 16px; }
+      .hero-visual { min-height: 400px; }
+      .scene-headline { grid-template-columns: 1fr; }
+      .grid-three { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .section { padding: 100px 0 60px; }
+    }
+    @media (max-width: 640px) {
+      .hero-title { font-size: clamp(2.8rem, 16vw, 5rem); }
+      .hero-actions { flex-direction: column; align-items: flex-start; width: 100%; }
+      .btn { width: 100%; }
+      .grid-three { grid-template-columns: 1fr; }
+      .header-inner { padding: 14px 16px; }
+      .section-inner { padding: 0 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header" id="siteHeader">
+    <div class="header-inner">
+      <a class="brand" onclick="scrollTo('#home')">
+        <span class="brand-mark"></span>
+        <span>JINGHAN TECHNOLOGY</span>
+      </a>
+
+      <nav class="nav">
+        <a onclick="scrollTo('#planning')">创意</a>
+        <a onclick="scrollTo('#ip')">IP</a>
+        <a onclick="scrollTo('#strategy')">战略</a>
+        <a onclick="scrollTo('#brand')">品牌</a>
+        <a onclick="scrollTo('#global')">全球</a>
+        <a onclick="scrollTo('#contact')">联系</a>
+      </nav>
+
+      <div class="lang-switch">
+        <button class="lang active" onclick="switchLang('zh-CN')">中文</button>
+        <button class="lang" onclick="switchLang('ja-JP')">日本語</button>
+        <button class="lang" onclick="switchLang('en-US')">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="story">
+    <!-- Hero Section -->
+    <section class="section hero" id="home" data-theme="light">
+      <div class="section-inner">
+        <div class="hero-wrap">
+          <div>
+            <span class="eyebrow">JINGHAN TECHNOLOGY</span>
+            <h1 class="hero-title">让创意，游向更大的世界。</h1>
+            <p class="hero-copy">从市场洞察到创意企划，<br>从IP开发到国际化品牌设计。<br>让创意转化为品牌的可能性。</p>
+            <div class="hero-actions">
+              <a class="btn primary" onclick="scrollTo('#planning')">探索业务</a>
+              <a class="btn secondary" onclick="scrollTo('#contact')">联系我们</a>
+            </div>
+          </div>
+
+          <div class="hero-visual">
+            <div class="visual-panel">
+              <div class="waterline"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="scroll-indicator">
+          <span>滚动</span>
+          <div class="scroll-line"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Planning Section -->
+    <section class="section" id="planning" data-theme="light">
+      <div class="section-inner">
+        <div class="scene-headline">
+          <div>
+            <span class="section-kicker">CREATIVE PLANNING</span>
+            <h2 class="big-title">广告创意与企划</h2>
+          </div>
+        </div>
+
+        <div class="split-grid">
+          <div>
+            <ul class="feature-list">
+              <li>广告创意与企划方案</li>
+              <li>品牌宣传策略与营销活动创意</li>
+              <li>创意概念与视觉方向提案</li>
+              <li>品牌推广企划与内容战略</li>
+            </ul>
+          </div>
+
+          <div class="editorial-visual">
+            <div class="shape-mass"></div>
+          </div>
+        </div>
+
+        <div class="grid-three">
+          <article class="tiny-card">
+            <span class="num">01</span>
+            <h3>品牌方向</h3>
+            <p>从审美、差异化到语义表达，构建更稳定的传播逻辑。</p>
+          </article>
+          <article class="tiny-card">
+            <span class="num">02</span>
+            <h3>市场映射</h3>
+            <p>洞察受众情绪与消费行为，把策略转化为动作性的传播设计。</p>
+          </article>
+          <article class="tiny-card">
+            <span class="num">03</span>
+            <h3>视觉叙事</h3>
+            <p>使品牌信息有节奏、有层次，并在中国、日本与国际市场中更易传播。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- IP Section -->
+    <section class="section" id="ip" data-theme="dark">
+      <div class="section-inner">
+        <div class="scene-headline">
+          <div>
+            <span class="section-kicker">IP & MASCOT DESIGN</span>
+            <h2 class="big-title">IP与吉祥物设计</h2>
+          </div>
+        </div>
+
+        <div class="grid-three" style="margin-top: 60px;">
+          <article class="tiny-card">
+            <span class="num">●</span>
+            <h3>概念设计</h3>
+            <p>从品牌核心价值出发，打造具有视觉冲击力的IP角色。</p>
+          </article>
+          <article class="tiny-card">
+            <span class="num">●</span>
+            <h3>表情延伸</h3>
+            <p>丰富IP的情感表达，让品牌与消费者产生更深层次的情感链接。</p>
+          </article>
+          <article class="tiny-card">
+            <span class="num">●</span>
+            <h3>应用拓展</h3>
+            <p>从平面到立体，从静态到动态，全方位赋能品牌传播。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Strategy Section -->
+    <section class="section" id="strategy" data-theme="light">
+      <div class="section-inner">
+        <div class="scene-headline">
+          <div>
+            <span class="section-kicker">MARKET RESEARCH & STRATEGY</span>
+            <h2 class="big-title">市场调查与战略企划</h2>
+          </div>
+        </div>
+
+        <div class="grid-three" style="margin-top: 60px;">
+          <div class="tiny-card">
+            <span class="num">3</span>
+            <h3>核心市场</h3>
+            <p>中国、日本及其他国际市场机会与差异分析。</p>
+          </div>
+          <div class="tiny-card">
+            <span class="num">12+</span>
+            <h3>研究维度</h3>
+            <p>消费者、品牌、产品、传播与竞争情境的多维观察。</p>
+          </div>
+          <div class="tiny-card">
+            <span class="num">4</span>
+            <h3>战略层次</h3>
+            <p>定位、传播、产品与市场进入路径的整合性建议。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Brand Section -->
+    <section class="section" id="brand" data-theme="dark">
+      <div class="section-inner">
+        <div class="scene-headline">
+          <div>
+            <span class="section-kicker">GLOBAL BRAND IDENTITY</span>
+            <h2 class="big-title">国际化Logo与品牌视觉设计</h2>
+          </div>
+        </div>
+
+        <div class="grid-three" style="margin-top: 60px;">
+          <article class="tiny-card">
+            <span class="num">★</span>
+            <h3>品牌语义</h3>
+            <p>结合品牌人群、行业特性和跨文化表达，建立具备辨识度的视觉系统。</p>
+          </article>
+          <article class="tiny-card">
+            <span class="num">★</span>
+            <h3>视觉适配</h3>
+            <p>在中文、日文、英文等语言环境中保持稳定且清晰的识别体验。</p>
+          </article>
+          <article class="tiny-card">
+            <span class="num">★</span>
+            <h3>全球执行</h3>
+            <p>从品牌命名、字体、图形到包装、界面一体化落地。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Global Section -->
+    <section class="section" id="global" data-theme="light">
+      <div class="section-inner">
+        <div class="scene-headline">
+          <div>
+            <span class="section-kicker">GLOBAL BUSINESS DEVELOPMENT</span>
+            <h2 class="big-title">海外市场拓展与国际业务</h2>
+          </div>
+        </div>
+
+        <div class="split-grid">
+          <div class="editorial-visual">
+            <div class="shape-mass" style="inset: 18% 12% 18% 18%; transform: rotate(10deg);"></div>
+          </div>
+
+          <div>
+            <ul class="feature-list">
+              <li>海外市场机会调查与行业判断</li>
+              <li>中国企业海外市场拓展支持</li>
+              <li>日本及其他海外市场的商业机会开发</li>
+              <li>采购需求对接与跨境业务支持</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="section contact-wrap" id="contact" data-theme="light">
+      <div class="contact-panel">
+        <div>
+          <h2 class="contact-header">让创意继续前行。</h2>
+          <p style="max-width: 520px; margin-top: 22px; color: var(--ink-soft); font-size: 1.15rem; line-height: 1.72;">
+            让创意，游向更大的世界。<br>从品牌到国际市场，我们帮助企业把愿景转化为具有辨识度与增长性的表达。
+          </p>
+          <div class="hero-actions" style="margin-top: 28px;">
+            <a class="btn primary" href="mailto:hello@jinghan-tech.com">发起合作</a>
+          </div>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-line"><strong>Company</strong> <span>上海境涵科技有限公司</span></div>
+          <div class="contact-line"><strong>Brand</strong> <span>JINGHAN TECHNOLOGY</span></div>
+          <div class="contact-line"><strong>Email</strong> <span>hello@jinghan-tech.com</span></div>
+          <div class="contact-line"><strong>Phone</strong> <span>+86 021-0000-0000</span></div>
+          <div class="contact-line"><strong>Address</strong> <span>Shanghai, China</span></div>
+          <div class="contact-line"><strong>WeChat</strong> <span>@jinghan-technology</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>JINGHAN TECHNOLOGY</div>
+      <small>From insight to creative impact.</small>
+    </div>
+  </footer>
+
+  <script>
+    // Header scroll effect
+    window.addEventListener('scroll', () => {
+      const header = document.getElementById('siteHeader');
+      if (window.scrollY > 50) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    });
+
+    // Smooth scroll function
+    function scrollTo(selector) {
+      const element = document.querySelector(selector);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    // Language switcher
+    function switchLang(lang) {
+      const buttons = document.querySelectorAll('.lang-switch button');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      document.body.setAttribute('data-lang', lang);
+    }
+
+    // Intersection Observer for animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -100px 0px'
+    };
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.tiny-card, .feature-list li').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'all 0.6s ease-out';
+      observer.observe(el);
+    });
+  </script>
+</body>
+</html>
